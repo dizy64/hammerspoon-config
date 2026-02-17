@@ -1,28 +1,17 @@
-function getNextOutputDevice()
-	local currentOutputDevice = hs.audiodevice.defaultOutputDevice()
-	local allOutputDevices = hs.audiodevice.allOutputDevices()
-	local currentOutputDeviceIndex = nil
-
-	for i = 1, #allOutputDevices do
-		if allOutputDevices[i]:uid() == currentOutputDevice:uid() then
-			currentOutputDeviceIndex = i
-			break
-		end
+local function detectConfigDir()
+	if _G.hs and hs.configdir then
+		return hs.configdir
 	end
-
-    nextDeviceIndex = (currentOutputDeviceIndex + 1) % (#allOutputDevices + 1)
-    
-    if nextDeviceIndex == 0 then
-        nextDeviceIndex = 1
-    end
-
-    return allOutputDevices[nextDeviceIndex]
+	local source = debug.getinfo(1, "S").source or ""
+	local path = source:match("^@(.+)%/init%.lua$")
+	return path or "."
 end
 
-hs.hotkey.bind({"cmd", "ctrl"}, "O", function()
-    local device = getNextOutputDevice()
-    hs.alert.closeAll()
-    hs.alert.show(device:name())
+local configDir = detectConfigDir()
+package.path = configDir .. "/?.lua;" .. configDir .. "/?/init.lua;" .. package.path
 
-    device:setDefaultOutputDevice()
-end)
+local sizeup = require("sizeup")
+
+sizeup.setup({
+	center = { mode = "absolute", width = 800, height = 600 },
+})
